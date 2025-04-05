@@ -13,6 +13,8 @@ import '../../services/billing_service.dart';
 import '../../services/inventory_service.dart';
 import '../../services/procedure_service.dart';
 import '../../services/storage_service.dart';
+import '../expense/add_expense.dart';
+import '../expense/view_expenses.dart';
 
 class home_Screen extends StatefulWidget {
   const home_Screen({super.key});
@@ -163,7 +165,7 @@ class _home_ScreenState extends State<home_Screen> {
           0.0, (sum, invoice) => sum + invoice.totalAmount);
 
       return {
-        'totalExpenses': totalExpenses, // ✅ Use a string key
+        'totalExpenses': totalExpenses,
       };
     } catch (e) {
       print("Error calculating total expenses: $e");
@@ -219,7 +221,7 @@ class _home_ScreenState extends State<home_Screen> {
         children: [
           Icon(
             icon,
-            color: Colors.blue, // Change as per your theme
+            color: Colors.blue,
           ),
           const SizedBox(width: 12),
           Column(
@@ -501,6 +503,64 @@ class _home_ScreenState extends State<home_Screen> {
                                 Navigator.pushNamed(
                                   context,
                                   '/create_bill',
+                                );
+                              },
+                            ),
+                            _buildModuleCard(
+                              title: 'Expenses',
+                              icon: Icons.account_balance_wallet_outlined,
+                              count: 'Manage',
+                              color: const Color(0xFF7E57C2),
+                              onTap: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return Dialog(
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                      child: Container(
+                                        padding: const EdgeInsets.all(16),
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            ListTile(
+                                              leading: const Icon(Icons.add_circle_outline),
+                                              title: const Text(
+                                                'Add Expense',
+                                                style: TextStyle(fontFamily: 'Lexend'),
+                                              ),
+                                              onTap: () {
+                                                Navigator.pop(context);
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (context) => const AddExpense(),
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                            ListTile(
+                                              leading: const Icon(Icons.list_alt),
+                                              title: const Text(
+                                                'View Expenses',
+                                                style: TextStyle(fontFamily: 'Lexend'),
+                                              ),
+                                              onTap: () {
+                                                Navigator.pop(context);
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (context) => const ViewExpenses(),
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  },
                                 );
                               },
                             ),

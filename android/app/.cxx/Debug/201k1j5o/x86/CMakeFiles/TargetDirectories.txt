@@ -1,0 +1,2 @@
+D:/RegrowthMobileDemo/android/app/.cxx/Debug/201k1j5o/x86/CMakeFiles/edit_cache.dir
+D:/RegrowthMobileDemo/android/app/.cxx/Debug/201k1j5o/x86/CMakeFiles/rebuild_cache.dir

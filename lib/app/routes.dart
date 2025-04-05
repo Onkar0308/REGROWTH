@@ -17,6 +17,8 @@ import 'package:regrowth_mobile/widgets/support_team.dart';
 
 import '../screens/billing/bill_list.dart';
 import '../screens/billing/create_bill.dart';
+import '../screens/expense/add_expense.dart';
+import '../screens/expense/view_expenses.dart';
 import '../screens/inventory/create_invoice.dart';
 import '../screens/inventory/invoice_list.dart';
 import '../screens/medicine/medicine_detail_screen.dart';
@@ -111,4 +113,6 @@ final Map<String, WidgetBuilder> appRoutes = {
   '/create_appointment': (context) => const CreateAppointment(),
   '/ext_procedure_list': (context) => const ExtProcedureList(),
   '/create_ext_procedure': (context) => const CreateExtProcedure(),
+  '/add_expense': (context) => const AddExpense(),
+  '/view_expenses': (context) => const ViewExpenses(),
 };

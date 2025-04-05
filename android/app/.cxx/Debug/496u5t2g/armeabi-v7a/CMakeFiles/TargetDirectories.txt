@@ -1,0 +1,2 @@
+D:/RegrowthMobileDemo/android/app/.cxx/Debug/496u5t2g/armeabi-v7a/CMakeFiles/edit_cache.dir
+D:/RegrowthMobileDemo/android/app/.cxx/Debug/496u5t2g/armeabi-v7a/CMakeFiles/rebuild_cache.dir
