@@ -16,6 +16,7 @@ class _ViewExpensesState extends State<ViewExpenses> {
   final ExpenseService _expenseService = ExpenseService();
   List<ExpenseModel> _expenses = [];
   bool _isLoading = true;
+  String? _error;
 
   @override
   void initState() {
@@ -25,19 +26,24 @@ class _ViewExpensesState extends State<ViewExpenses> {
 
   Future<void> _loadExpenses() async {
     try {
-      final expenses = await _expenseService.getExpenses();
       setState(() {
-        _expenses = expenses;
-        _isLoading = false;
+        _isLoading = true;
+        _error = null;
       });
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
+
+      final expenses = await _expenseService.getExpensesWithErrorHandling();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load expenses: $e')),
-        );
+        setState(() {
+          _expenses = expenses;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _error = e.toString();
+        });
       }
     }
   }
@@ -48,13 +54,20 @@ class _ViewExpensesState extends State<ViewExpenses> {
       _loadExpenses();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Expense deleted successfully')),
+          const SnackBar(
+            content: Text('Expense deleted successfully'),
+            backgroundColor: Colors.green,
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to delete expense: $e')),
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
         );
       }
     }
@@ -68,20 +81,6 @@ class _ViewExpensesState extends State<ViewExpenses> {
           'Expenses',
           style: TextStyle(fontFamily: 'Lexend'),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () async {
-              final result = await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const AddExpense()),
-              );
-              if (result == true) {
-                _loadExpenses();
-              }
-            },
-          ),
-        ],
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -108,131 +107,209 @@ class _ViewExpensesState extends State<ViewExpenses> {
                   ],
                 ),
               )
-            : _expenses.isEmpty
-                ? const Center(
-                    child: Text(
-                      'No expenses found',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontFamily: 'Lexend',
-                      ),
+            : _error != null
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.error_outline,
+                          color: Colors.red,
+                          size: 48,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          _error!,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontFamily: 'Lexend',
+                            color: Colors.red,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        ElevatedButton(
+                          onPressed: _loadExpenses,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.buttoncolor,
+                          ),
+                          child: const Text(
+                            'Retry',
+                            style: TextStyle(
+                              fontFamily: 'Lexend',
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   )
-                : ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _expenses.length,
-                    itemBuilder: (context, index) {
-                      final expense = _expenses[index];
-                      return Card(
-                        elevation: 2,
-                        margin: const EdgeInsets.only(bottom: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.all(16),
-                          title: Text(
-                            expense.title,
-                            style: const TextStyle(
-                              fontFamily: 'Lexend',
-                              fontWeight: FontWeight.w600,
-                              fontSize: 16,
-                            ),
+                : _expenses.isEmpty
+                    ? const Center(
+                        child: Text(
+                          'No expenses found',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontFamily: 'Lexend',
                           ),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const SizedBox(height: 8),
-                              Text(
-                                expense.description,
-                                style: const TextStyle(
-                                  fontFamily: 'Lexend',
-                                  fontSize: 14,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Row(
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: _expenses.length,
+                        itemBuilder: (context, index) {
+                          final expense = _expenses[index];
+                          return Card(
+                            elevation: 2,
+                            margin: const EdgeInsets.only(bottom: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 4,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.primary.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: Text(
-                                      expense.category,
-                                      style: TextStyle(
-                                        fontFamily: 'Lexend',
-                                        fontSize: 12,
-                                        color: AppColors.primary,
+                                  // Category and Date
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 4,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.primary.withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                        child: Text(
+                                          expense.category,
+                                          style: TextStyle(
+                                            fontFamily: 'Lexend',
+                                            fontSize: 14,
+                                            color: AppColors.primary,
+                                          ),
+                                        ),
                                       ),
-                                    ),
+                                      const Spacer(),
+                                      Text(
+                                        DateFormat('dd/MM/yyyy').format(expense.date),
+                                        style: const TextStyle(
+                                          fontFamily: 'Lexend',
+                                          fontSize: 12,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  const Spacer(),
+                                  const SizedBox(height: 12),
+
+                                  // Description
                                   Text(
-                                    DateFormat('dd/MM/yyyy').format(expense.date),
+                                    expense.description,
                                     style: const TextStyle(
                                       fontFamily: 'Lexend',
-                                      fontSize: 12,
-                                      color: Colors.grey,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+
+                                  // Amounts
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[100],
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        // Cash Amount
+                                        Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            const Text(
+                                              'Cash',
+                                              style: TextStyle(
+                                                fontFamily: 'Lexend',
+                                                fontSize: 12,
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                            Text(
+                                              '₹${expense.cash_amount.toStringAsFixed(2)}',
+                                              style: const TextStyle(
+                                                fontFamily: 'Lexend',
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        // Online Amount
+                                        Column(
+                                          crossAxisAlignment: CrossAxisAlignment.center,
+                                          children: [
+                                            const Text(
+                                              'Online',
+                                              style: TextStyle(
+                                                fontFamily: 'Lexend',
+                                                fontSize: 12,
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                            Text(
+                                              '₹${expense.online_amount.toStringAsFixed(2)}',
+                                              style: const TextStyle(
+                                                fontFamily: 'Lexend',
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        // Total Amount
+                                        Column(
+                                          crossAxisAlignment: CrossAxisAlignment.end,
+                                          children: [
+                                            const Text(
+                                              'Total',
+                                              style: TextStyle(
+                                                fontFamily: 'Lexend',
+                                                fontSize: 12,
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                            Text(
+                                              '₹${expense.totalAmount.toStringAsFixed(2)}',
+                                              style: const TextStyle(
+                                                fontFamily: 'Lexend',
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ],
                               ),
-                            ],
-                          ),
-                          trailing: Text(
-                            '₹${expense.amount.toStringAsFixed(2)}',
-                            style: const TextStyle(
-                              fontFamily: 'Lexend',
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
                             ),
-                          ),
-                          onLongPress: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: const Text(
-                                  'Delete Expense',
-                                  style: TextStyle(fontFamily: 'Lexend'),
-                                ),
-                                content: const Text(
-                                  'Are you sure you want to delete this expense?',
-                                  style: TextStyle(fontFamily: 'Lexend'),
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: const Text(
-                                      'Cancel',
-                                      style: TextStyle(fontFamily: 'Lexend'),
-                                    ),
-                                  ),
-                                  TextButton(
-                                    onPressed: () {
-                                      Navigator.pop(context);
-                                      _deleteExpense(expense.id);
-                                    },
-                                    child: const Text(
-                                      'Delete',
-                                      style: TextStyle(
-                                        fontFamily: 'Lexend',
-                                        color: Colors.red,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                        ),
-                      );
-                    },
-                  ),
+                          );
+                        },
+                      ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const AddExpense()),
+          );
+          if (result == true) {
+            _loadExpenses();
+          }
+        },
+        backgroundColor: AppColors.buttoncolor,
+        child: const Icon(Icons.add),
       ),
     );
   }

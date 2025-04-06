@@ -7,6 +7,7 @@ class CustomInputField extends StatefulWidget {
   final TextInputType? keyboardType;
   final String? Function(String?)? validator;
   final void Function(String)? onChanged;
+  final int? maxLines;
 
   const CustomInputField({
     super.key,
@@ -16,6 +17,7 @@ class CustomInputField extends StatefulWidget {
     this.keyboardType,
     this.validator,
     this.onChanged,
+    this.maxLines = 1,
   });
 
   @override
@@ -29,7 +31,10 @@ class _CustomInputFieldState extends State<CustomInputField> {
   Widget build(BuildContext context) {
     return Container(
       width: double.maxFinite,
-      height: 55,
+      constraints: BoxConstraints(
+        minHeight: 55,
+        maxHeight: (widget.maxLines ?? 1) * 55.0,
+      ),
       decoration: BoxDecoration(
         border: Border.all(
           color: const Color.fromRGBO(0, 0, 0, 1),
@@ -39,13 +44,14 @@ class _CustomInputFieldState extends State<CustomInputField> {
         color: Colors.transparent,
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 15),
+        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
         child: TextFormField(
           controller: widget.controller,
           obscureText: widget.isPassword && _obscurePassword,
           keyboardType: widget.keyboardType,
           validator: widget.validator,
           onChanged: widget.onChanged,
+          maxLines: widget.maxLines,
           style: const TextStyle(
             fontFamily: 'Lexend',
             fontSize: 15,
@@ -78,6 +84,8 @@ class _CustomInputFieldState extends State<CustomInputField> {
                     },
                   )
                 : null,
+            isDense: true,
+            contentPadding: EdgeInsets.zero,
           ),
         ),
       ),
